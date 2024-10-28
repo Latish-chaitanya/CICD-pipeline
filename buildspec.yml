@@ -1,0 +1,54 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_ACCOUNT_ID: "010438506754"
+    AWS_REGION: "us-east-1"
+    ECR_REPOSITORY: "fullstack/python"
+    EKS_CLUSTER_NAME: "my-cluster"
+
+phases:
+  install:
+    commands:
+      - echo Installing pip
+      - curl -O https://bootstrap.pypa.io/get-pip.py
+      - python3 get-pip.py
+      - echo Installing AWS CLI using pip
+      - pip install awscli
+      - echo AWS CLI installed successfully
+      - echo Installing kubectl
+      - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+      - chmod +x ./kubectl
+      - mv ./kubectl /usr/local/bin/kubectl
+      - echo kubectl installed successfully
+
+  pre_build:
+    commands:
+      - aws --version
+      - docker --version
+      - echo Logging in to Amazon ECR
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+  build:
+    commands:
+      - echo Reading version from file
+      - VERSION=$(cat version)
+      - echo Building the Docker image
+      - docker build -t my-app .
+      - echo Tagging the Docker image with version $VERSION
+      - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
+      - echo Pushing the Docker image
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
+
+  post_build:
+    commands: 
+          - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
+          - template=$(cat "backenddeployment.yaml" | sed "s/latest/$VERSION/g")
+          - echo "$template" | kubectl apply -f - || echo "Failed to apply template"
+
+
+
+
+artifacts:
+  files:
+    - '**/*'
