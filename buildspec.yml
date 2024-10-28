@@ -1,3 +1,5 @@
+version: 0.2
+
 env:
   variables:
     AWS_ACCOUNT_ID: "010438506754"
@@ -33,11 +35,13 @@ phases:
     commands:
       - echo Reading version from file
       - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }
+      - echo "Version content: $VERSION"
       - echo Building the Docker image
       - docker build -t my-app .
       - echo "Docker images after build:"
       - docker images
       - echo Tagging the Docker image with version $VERSION
+      - echo "ECR Repository: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY"
       - docker tag my-app $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
       - echo Pushing the Docker image
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
