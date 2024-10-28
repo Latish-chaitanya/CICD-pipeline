@@ -4,8 +4,9 @@ env:
   variables:
     AWS_ACCOUNT_ID: "010438506754"
     AWS_REGION: "us-east-1"
-    ECR_REPOSITORY: "fullstack/python"
-    EKS_CLUSTER_NAME: "my-cluster1"
+    ECR_REPOSITORY: "fullstack/python"  # Updated to match your repository
+    EKS_CLUSTER_NAME: "my-cluster"
+    K8S_NAMESPACE: "my-app"
 
 phases:
   install:
@@ -26,31 +27,24 @@ phases:
     commands:
       - aws --version
       - docker --version
-      - echo Logging in to Amazon ECR...
-      - $(aws ecr get-login --no-include-email --region $AWS_REGION)
-      - echo "Docker login output:"
-      - docker info
+      - echo Logging in to Amazon ECR
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
   build:
     commands:
       - echo Reading version from file
-      - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }
-      - echo "Version content: $VERSION"
+      - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }  # Handle case if version file is missing
       - echo Building the Docker image
-      - docker build -t my-app .
-      - echo "Docker images after build:"
-      - docker images
+      - docker build -t my-app ./back-end  # Ensure this path is correct
       - echo Tagging the Docker image with version $VERSION
-      - echo "ECR Repository: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY"
-      - docker tag my-app $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
+      - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
       - echo Pushing the Docker image
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
 
   post_build:
     commands: 
       - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
-      - echo "Updating deployment with version $VERSION"
-      - template=$(sed "s/latest/$VERSION/g" deployment.yaml)
+      - template=$(cat "deployment.yaml" | sed "s/latest/$VERSION/g")
       - echo "$template" | kubectl apply -f - || echo "Failed to apply template"
 
 artifacts:
