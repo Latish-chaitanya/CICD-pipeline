@@ -36,11 +36,11 @@ phases:
       - echo Reading version from file
       - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }  # Handle case if version file is missing
       - echo Building the Docker image
-      - docker build -t my-app . # Ensure this path is correct
+      - docker build -t my-app .
       - echo Tagging the Docker image with version $VERSION
-      - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
+      - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
       - echo Pushing the Docker image
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
 
   post_build:
     commands: 
