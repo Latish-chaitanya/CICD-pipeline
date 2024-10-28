@@ -27,7 +27,8 @@ phases:
       - aws --version
       - docker --version
       - echo Logging in to Amazon ECR
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --no-include-email --region $AWS_REGION)
 
   build:
     commands:
@@ -39,15 +40,11 @@ phases:
       - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
       - echo Pushing the Docker image
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
-
   post_build:
     commands: 
           - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
           - template=$(cat "backenddeployment.yaml" | sed "s/latest/$VERSION/g")
           - echo "$template" | kubectl apply -f - || echo "Failed to apply template"
-
-
-
 
 artifacts:
   files:
