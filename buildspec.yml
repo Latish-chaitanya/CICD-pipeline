@@ -1,5 +1,3 @@
-version: 0.2
-
 env:
   variables:
     AWS_ACCOUNT_ID: "010438506754"
@@ -34,7 +32,7 @@ phases:
   build:
     commands:
       - echo Reading version from file
-      - VERSION=$(cat version)
+      - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }
       - echo "Version content: $VERSION"
       - echo Building the Docker image
       - docker build -t my-app .
@@ -44,10 +42,12 @@ phases:
       - docker tag my-app $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
       - echo Pushing the Docker image
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
+
   post_build:
     commands: 
       - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
-      - template=$(cat "deployment.yaml" | sed "s/latest/$VERSION/g")
+      - echo "Updating deployment with version $VERSION"
+      - template=$(sed "s/latest/$VERSION/g" deployment.yaml)
       - echo "$template" | kubectl apply -f - || echo "Failed to apply template"
 
 artifacts:
