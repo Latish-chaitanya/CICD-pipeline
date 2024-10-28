@@ -28,14 +28,15 @@ phases:
       - aws --version
       - docker --version
       - echo Logging in to Amazon ECR
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-
+      - $(aws ecr get-login --no-include-email --region $AWS_REGION)
+      - echo "Docker login output:"
+      - docker info
   build:
     commands:
       - echo Reading version from file
       - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }  # Handle case if version file is missing
       - echo Building the Docker image
-      - docker build -t my-app ./back-end  # Ensure this path is correct
+      - docker build -t my-app . # Ensure this path is correct
       - echo Tagging the Docker image with version $VERSION
       - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$VERSION
       - echo Pushing the Docker image
