@@ -5,7 +5,7 @@ env:
     AWS_ACCOUNT_ID: "010438506754"
     AWS_REGION: "us-east-1"
     ECR_REPOSITORY: "fullstack/python"  # Updated to match your repository
-    EKS_CLUSTER_NAME: "my-cluster"
+    EKS_CLUSTER_NAME: "my-cluster1"
     K8S_NAMESPACE: "my-app"
 
 phases:
