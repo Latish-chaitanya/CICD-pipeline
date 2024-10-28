@@ -33,7 +33,6 @@ phases:
     commands:
       - echo Reading version from file
       - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }
-      - echo "Version content: $VERSION"
       - echo Building the Docker image
       - docker build -t my-app .
       - echo "Docker images after build:"
