@@ -21,6 +21,7 @@ phases:
       - chmod +x ./kubectl
       - mv ./kubectl /usr/local/bin/kubectl
       - echo kubectl installed successfully
+      - curl -Lo aws-iam-authenticator https://
 
   pre_build:
     commands:
