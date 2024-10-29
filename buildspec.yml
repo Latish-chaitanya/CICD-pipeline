@@ -40,6 +40,8 @@ phases:
   post_build:
     commands: 
       # - template=`cat "configs/deployment.yml" | sed "s/latest/$VERSION/g"`
+      - echo kubectl get nodes
+      - export KUBECONFIG=$HOME/.kube/config
       - kubectl apply -f deployment.yml
 
 artifacts:
