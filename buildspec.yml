@@ -4,7 +4,7 @@ env:
   variables:
     AWS_ACCOUNT_ID: "010438506754"
     AWS_REGION: "us-east-1"
-    ECR_REPOSITORY: "fullstack/python"  # Updated to match your repository
+    ECR_REPOSITORY: "fullstack/python"  
     EKS_CLUSTER_NAME: "my-cluster1"
 
 phases:
@@ -24,22 +24,28 @@ phases:
 
   pre_build:
     commands:
+      - aws --version
+      - docker --version
       - echo Logging in to Amazon ECR
       - $(aws ecr get-login --no-include-email --region $AWS_REGION)
-
+      - echo "Docker login output:"
+      - docker info
   build:
     commands:
       - echo Reading version from file
       - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }  # Handle case if version file is missing
+      - echo Building the Docker image
+      - docker build -t my-app .
+      - echo Tagging the Docker image with version $VERSION
+      - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
+      - echo Pushing the Docker image
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
 
   post_build:
     commands: 
       - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
-      - kubectl config view # Print the kubeconfig
-      - kubectl config current-context # Check current context
-      - kubectl get nodes || echo "Failed to connect to EKS cluster"
-      - echo "$template" | kubectl apply -f deployment.yml --validate=false || echo "Failed to apply template"
-
+      - template=$(cat "deployment.yml" | sed "s/latest/$VERSION/g")
+      - echo "$template" | kubectl apply -f - || echo "Failed to apply template"
 
 artifacts:
   files:
