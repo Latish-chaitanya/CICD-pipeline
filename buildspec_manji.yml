@@ -16,7 +16,7 @@ install:
      - export PATH=$PWD/:$PATH
 pre_build:
    commands:
-     - IMAGE="drake-ui"
+     - IMAGE="-ui"
      - BUILD_NUMBER=$(cat version)
      - aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 213458679324567.dkr.ecr.eu-west-1.amazonaws.com
      - export KUBECONFIG=$HOME/.kube/config
@@ -30,4 +30,4 @@ post_build:
      - docker push 1234567890.dkr.ecr.eu-west-1.amazonaws.com/$IMAGE:$environment-$BUILD_NUMBER
      - aws eks update-kubeconfig --name drake
      - template=`cat "$IMAGE-$environment.yaml" | sed "s/{{BUILD_NUMBER}}/$environment-$BUILD_NUMBER/g"`
-     - kubectl apply -f "deployment.yml"
+     - echo "$template" | kubectl apply -f -
