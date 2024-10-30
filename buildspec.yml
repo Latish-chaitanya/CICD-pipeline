@@ -1,8 +1,8 @@
 version: 0.2
 env:
   parameter-store:
-    docker_username: /arn:aws:ssm:us-east-1:010438506754:parameter/docker_u_name
-    docker_password: /arn:aws:ssm:us-east-1:010438506754:parameter/docker_password
+    docker_username: /parameter/docker_u_name
+    docker_password: /parameter/docker_password
 phases:
   install:
     # runtime-versions:
