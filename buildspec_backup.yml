@@ -15,21 +15,16 @@ phases:
       - python3 get-pip.py
       - echo Installing AWS CLI using pip
       - pip install awscli
-      - echo AWS CLI installed successfully
-      - echo Installing kubectl
-      - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+      - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
       - chmod +x ./kubectl
-      - mv ./kubectl /usr/local/bin/kubectl
-      - echo kubectl installed successfully
+      - curl -Lo aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.5.9/aws-iam-authenticator_0.5.9_linux_amd64
+      - chmod +x ./aws-iam-authenticator
+      - export PATH=$PWD/:$PATH
 
   pre_build:
     commands:
-      - aws --version
-      - docker --version
       - echo Logging in to Amazon ECR
-      - $(aws ecr get-login --no-include-email --region $AWS_REGION)
-      - echo "Docker login output:"
-      - docker info
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 010438506754.dkr.ecr.us-east-1.amazonaws.com
   build:
     commands:
       - echo Reading version from file
@@ -39,13 +34,16 @@ phases:
       - echo Tagging the Docker image with version $VERSION
       - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
       - echo Pushing the Docker image
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
 
   post_build:
     commands: 
-      - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
-      - template=$(cat "deployment.yml" | sed "s/latest/$VERSION/g")
-      - echo "$template" | kubectl apply -f - || echo "Failed to apply template"
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
+      # - aws eks update-kubeconfig --name my-cluster1
+      - aws eks update-kubeconfig --name my-cluster1 --role-arn arn:aws:iam::010438506754:role/codebuild-demoproject-CICD-service-role 
+      - template=`cat "deployment.yml" | sed "s/latest/$VERSION/g"`
+      - kubectl get nodes --debug
+      - echo "$template" | kubectl apply -f -
+      - echo "$template" | cat
 
 artifacts:
   files:
