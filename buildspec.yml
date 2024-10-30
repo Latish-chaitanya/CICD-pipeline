@@ -38,7 +38,8 @@ phases:
   post_build:
     commands: 
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
-      - aws eks update-kubeconfig --name my-cluster1
+      # - aws eks update-kubeconfig --name my-cluster1
+      - aws eks update-kubeconfig --name my-cluster1 --role-arn arn:aws:iam::010438506754:role/codebuild-demoproject-CICD-service-role --debug
       - template=`cat "deployment.yml" | sed "s/latest/$VERSION/g"`
       - echo "$template" | kubectl apply -f -
       - echo "$template" | cat
