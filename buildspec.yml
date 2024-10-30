@@ -27,20 +27,19 @@ phases:
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 010438506754.dkr.ecr.us-east-1.amazonaws.com
   build:
     commands:
-      # - echo Reading version from file
-       - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }  # Handle case if version file is missing
-      # - echo Building the Docker image
-      # - docker build -t my-app .
-      # - echo Tagging the Docker image with version $VERSION
-      # - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
-      # - echo Pushing the Docker image
+      - echo Reading version from file
+      - VERSION=$(cat version) || { echo "Version file not found"; exit 1; }  # Handle case if version file is missing
+      - echo Building the Docker image
+      - docker build -t my-app .
+      - echo Tagging the Docker image with version $VERSION
+      - docker tag my-app:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
+      - echo Pushing the Docker image
 
   post_build:
     commands: 
-      # - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/fullstack/python:$VERSION
       - aws eks update-kubeconfig --name my-cluster1
       - template=`cat "deployment.yml" | sed "s/latest/$VERSION/g"`
-      - kubectl get nodes
       - echo "$template" | kubectl apply -f -
       - echo "$template" | cat
 
