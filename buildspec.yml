@@ -35,4 +35,5 @@ phases:
       - docker push 010438506754.dkr.ecr.us-east-1.amazonaws.com/$IMAGE:$BUILD_NUMBER
       - aws eks update-kubeconfig --name my-cluster1
       - template=`cat "deployment.yml" | sed "s/latest/$BUILD_NUMBER/g"`
+      - echo "$template"
       - echo "$template" | kubectl apply -f -
