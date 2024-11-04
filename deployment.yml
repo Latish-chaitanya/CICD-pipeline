@@ -16,10 +16,10 @@ spec:
     spec:
       containers:
         - name: two-tier-app
-          image: 010438506754.dkr.ecr.us-east-1.amazonaws.com/fullstack/python:latest
+          image: 010438506754.dkr.ecr.us-east-1.amazonaws.com/cicd:latest
           env:
             - name: MYSQL_HOST
-              value: mysql          # this is your mysql's service clusture IP, Make sure to change it with yours
+              value: mysql        
             - name: MYSQL_PASSWORD
               value: "admin"
             - name: MYSQL_USER
@@ -29,3 +29,10 @@ spec:
           ports:
             - containerPort: 5000
           imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "128Mi"  
+              cpu: "100m"       
+            limits:
+              memory: "256Mi"   
+              cpu: "200m"       
