@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: two-tier-app
-          image: 010438506754.dkr.ecr.us-east-1.amazonaws.com/cicd:latest
+          image: 010438506754.dkr.ecr.us-east-1.amazonaws.com/fullstack/python:latest
           env:
             - name: MYSQL_HOST
               value: mysql        
